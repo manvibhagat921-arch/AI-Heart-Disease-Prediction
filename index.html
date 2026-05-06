@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeartGuard AI — Heart Disease Risk Assessment</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+
+<header class="header">
+    <div class="header-inner">
+        <div class="logo">
+            <div class="logo-icon">♥</div>
+            <div class="logo-text">
+                <h1>HeartGuard AI</h1>
+                <p>AI-Based Heart Disease Risk Assessment System</p>
+            </div>
+        </div>
+        <div class="header-badges">
+            <div class="badge-pill" id="modelBadge">
+                <span class="dot"></span>
+                <span id="modelNameBadge">Loading…</span>
+            </div>
+            <div class="badge-pill badge-secondary">
+                <span>🔬 Research Grade</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="disclaimer-banner">
+    ⚕️ <strong>Medical Disclaimer:</strong> This tool is for educational and research purposes only. It does not replace professional medical advice. Always consult a qualified physician for diagnosis.
+</div>
+
+
+<main class="main">
+    <div class="layout">
+
+       
+        <section class="panel panel-form">
+            <div class="panel-header">
+                <h2>Patient Health Data</h2>
+                <p>Enter all 9 clinical parameters to generate a risk assessment</p>
+            </div>
+
+            <form id="predictionForm" novalidate>
+
+              
+                <div class="form-row">
+                    <div class="field">
+                        <label for="age">Age <span class="unit">years</span></label>
+                        <input type="number" id="age" name="age" min="20" max="100"
+                               placeholder="e.g. 55" required>
+                        <span class="field-hint">Range: 20 – 100</span>
+                    </div>
+                    <div class="field">
+                        <label for="sex">Biological Sex</label>
+                        <select id="sex" name="sex" required>
+                            <option value="">Select…</option>
+                            <option value="1">Male</option>
+                            <option value="0">Female</option>
+                        </select>
+                    </div>
+                </div>
+
+                
+                <div class="field">
+                    <label for="cp">Chest Pain Type</label>
+                    <select id="cp" name="cp" required>
+                        <option value="">Select chest pain type…</option>
+                        <option value="0">0 — Typical Angina</option>
+                        <option value="1">1 — Atypical Angina</option>
+                        <option value="2">2 — Non-anginal Pain</option>
+                        <option value="3">3 — Asymptomatic</option>
+                    </select>
+                    <span class="field-hint">Nature of chest discomfort experienced</span>
+                </div>
+
+                
+                <div class="form-row">
+                    <div class="field">
+                        <label for="trestbps">Resting Blood Pressure <span class="unit">mmHg</span></label>
+                        <input type="number" id="trestbps" name="trestbps" min="80" max="250"
+                               placeholder="e.g. 130" required>
+                        <span class="field-hint">Normal: 90–120 mmHg</span>
+                    </div>
+                    <div class="field">
+                        <label for="chol">Serum Cholesterol <span class="unit">mg/dl</span></label>
+                        <input type="number" id="chol" name="chol" min="100" max="600"
+                               placeholder="e.g. 240" required>
+                        <span class="field-hint">Desirable: &lt; 200 mg/dl</span>
+                    </div>
+                </div>
+
+                
+                <div class="form-row">
+                    <div class="field">
+                        <label for="fbs">Fasting Blood Sugar &gt; 120 mg/dl</label>
+                        <select id="fbs" name="fbs" required>
+                            <option value="">Select…</option>
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="restecg">Resting ECG Result</label>
+                        <select id="restecg" name="restecg" required>
+                            <option value="">Select ECG result…</option>
+                            <option value="0">0 — Normal</option>
+                            <option value="1">1 — ST-T Wave Abnormality</option>
+                            <option value="2">2 — Left Ventricular Hypertrophy</option>
+                        </select>
+                    </div>
+                </div>
+
+                
+                <div class="form-row">
+                    <div class="field">
+                        <label for="thalach">Max Heart Rate Achieved <span class="unit">bpm</span></label>
+                        <input type="number" id="thalach" name="thalach" min="60" max="220"
+                               placeholder="e.g. 150" required>
+                        <span class="field-hint">Typical: 60–202 bpm</span>
+                    </div>
+                    <div class="field">
+                        <label for="exang">Exercise-Induced Angina</label>
+                        <select id="exang" name="exang" required>
+                            <option value="">Select…</option>
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="formError" class="form-error" style="display:none;"></div>
+
+                <button type="submit" class="btn-predict" id="submitBtn">
+                    <span>🔍</span> Run Risk Assessment
+                </button>
+
+                <button type="button" class="btn-clear" onclick="clearForm()">Clear Form</button>
+            </form>
+        </section>
+
+        
+        <section class="panel panel-right">
+
+            
+            <div class="result-card" id="resultCard" style="display:none;">
+                
+                <div class="risk-header" id="riskHeader">
+                    <div class="risk-icon" id="riskIcon"></div>
+                    <div class="risk-label-block">
+                        <div class="risk-tag" id="riskTag"></div>
+                        <h3 id="riskTitle"></h3>
+                        <p id="riskAdvice"></p>
+                    </div>
+                </div>
+
+                
+                <div class="gauge-section">
+                    <div class="gauge-label">
+                        <span>Heart Disease Probability</span>
+                        <span class="gauge-pct" id="gaugePct">—</span>
+                    </div>
+                    <div class="gauge-track">
+                        <div class="gauge-fill" id="gaugeFill"></div>
+                        <div class="gauge-zones">
+                            <div class="zone zone-low" title="Low &lt;30%"></div>
+                            <div class="zone zone-mod" title="Moderate 30–55%"></div>
+                            <div class="zone zone-high" title="High 55–75%"></div>
+                            <div class="zone zone-vhigh" title="Very High &gt;75%"></div>
+                        </div>
+                    </div>
+                    <div class="gauge-scale">
+                        <span>0%</span><span>30%</span><span>55%</span><span>75%</span><span>100%</span>
+                    </div>
+                </div>
+
+                
+                <div class="prob-bars">
+                    <div class="prob-row">
+                        <span class="prob-label">No Disease Probability</span>
+                        <div class="prob-track">
+                            <div class="prob-fill fill-safe" id="barSafe"></div>
+                        </div>
+                        <span class="prob-val" id="pctSafe">—</span>
+                    </div>
+                    <div class="prob-row">
+                        <span class="prob-label">Heart Disease Probability</span>
+                        <div class="prob-track">
+                            <div class="prob-fill fill-risk" id="barRisk"></div>
+                        </div>
+                        <span class="prob-val" id="pctRisk">—</span>
+                    </div>
+                </div>
+
+               
+                <div class="meta-chips">
+                    <div class="chip">
+                        <span class="chip-label">Model Used</span>
+                        <span class="chip-value" id="metaModel">—</span>
+                    </div>
+                    <div class="chip">
+                        <span class="chip-label">Confidence</span>
+                        <span class="chip-value" id="metaConf">—</span>
+                    </div>
+                    <div class="chip">
+                        <span class="chip-label">Record #</span>
+                        <span class="chip-value" id="metaId">—</span>
+                    </div>
+                </div>
+            </div>
+
+           
+            <div class="panel panel-metrics" id="metricsPanel" style="display:none;">
+                <div class="panel-header">
+                    <h3>Model Performance Comparison</h3>
+                    <p>GridSearchCV tuned · 5-fold cross-validation · UCI dataset</p>
+                </div>
+                <div class="metrics-table-wrap">
+                    <table class="metrics-table" id="metricsTable">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Accuracy</th>
+                                <th>Precision</th>
+                                <th>Recall</th>
+                                <th>F1</th>
+                                <th>AUC</th>
+                            </tr>
+                        </thead>
+                        <tbody id="metricsBody"></tbody>
+                    </table>
+                </div>
+                
+                <div class="cm-section" id="cmSection">
+                    <h4>Confusion Matrix — <span id="cmModelName"></span></h4>
+                    <div class="cm-grid" id="cmGrid"></div>
+                    <div class="cm-legend">
+                        <span><b>TP</b>=True Positive</span>
+                        <span><b>TN</b>=True Negative</span>
+                        <span><b>FP</b>=False Positive</span>
+                        <span><b>FN</b>=False Negative</span>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="panel panel-stats">
+                <div class="panel-header">
+                    <h3>System Statistics</h3>
+                    <button class="btn-icon-sm" onclick="loadAll()">↻ Refresh</button>
+                </div>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-box">
+                        <div class="stat-val" id="statTotal">—</div>
+                        <div class="stat-name">Total Assessments</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val risk-color" id="statAvgProb">—</div>
+                        <div class="stat-name">Avg. Disease Probability</div>
+                    </div>
+                </div>
+                <div id="riskDistBar" class="risk-dist"></div>
+            </div>
+
+            
+            <div class="panel panel-history">
+                <div class="panel-header">
+                    <h3>Prediction History</h3>
+                    <button class="btn-icon-sm" onclick="loadHistory()">↻</button>
+                </div>
+                <div class="table-scroll">
+                    <table class="hist-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Age</th>
+                                <th>Sex</th>
+                                <th>BP</th>
+                                <th>Chol</th>
+                                <th>Risk Level</th>
+                                <th>Probability</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="histBody">
+                            <tr><td colspan="8" class="empty-cell">No records yet</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+
+<footer class="footer">
+    <p>HeartGuard AI · scikit-learn · UCI Heart Disease Dataset · Flask · SQLite</p>
+    <p>Educational & Research Use Only — Not a Medical Device</p>
+</footer>
+
+
+<div class="overlay" id="overlay">
+    <div class="overlay-card">
+        <div class="spinner"></div>
+        <p>Running AI analysis…</p>
+        <small>Models: LR · RF · SVM · GridSearchCV</small>
+    </div>
+</div>
+
+
+<script>
+const API = window.location.pathname.startsWith('/flask') ? '/flask' : '';
+
+const RISK_CONFIG = {
+    'Low Risk':       { color: '#059669', bg: '#d1fae5', border: '#6ee7b7', icon: '✅', emoji: '🟢' },
+    'Moderate Risk':  { color: '#d97706', bg: '#fef3c7', border: '#fcd34d', icon: '⚠️', emoji: '🟡' },
+    'High Risk':      { color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', icon: '🚨', emoji: '🔴' },
+    'Very High Risk': { color: '#7c3aed', bg: '#ede9fe', border: '#c4b5fd', icon: '🆘', emoji: '🟣' }
+};
+
+
+async function loadAll() {
+    await Promise.all([loadModelInfo(), loadStats(), loadHistory(), loadMetrics()]);
+}
+
+async function loadModelInfo() {
+    try {
+        const r = await fetch(`${API}/health`);
+        const d = await r.json();
+        const badge = document.getElementById('modelBadge');
+        const name  = document.getElementById('modelNameBadge');
+        if (d.model_loaded && d.model_info) {
+            name.textContent = `${d.model_info.best_model} · F1 ${(d.model_info.best_f1*100).toFixed(1)}%`;
+            badge.classList.add('active');
+        } else {
+            name.textContent = 'Model not loaded — run model_training.py';
+            badge.classList.add('error');
+        }
+    } catch { document.getElementById('modelNameBadge').textContent = 'Backend offline'; }
+}
+
+async function loadMetrics() {
+    try {
+        const r = await fetch(`${API}/model-info`);
+        const d = await r.json();
+        if (!d || !d.comparison) return;
+
+        const panel = document.getElementById('metricsPanel');
+        panel.style.display = 'block';
+
+        const tbody = document.getElementById('metricsBody');
+        tbody.innerHTML = d.comparison.map(m => `
+            <tr class="${m.name === d.best_model ? 'best-row' : ''}">
+                <td>${m.name}${m.name === d.best_model ? ' <span class="best-badge">BEST</span>' : ''}</td>
+                <td>${(m.test_accuracy*100).toFixed(1)}%</td>
+                <td>${(m.test_precision*100).toFixed(1)}%</td>
+                <td>${(m.test_recall*100).toFixed(1)}%</td>
+                <td>${(m.test_f1*100).toFixed(1)}%</td>
+                <td>${(m.test_auc*100).toFixed(1)}%</td>
+            </tr>
+        `).join('');
+
+        
+        const best = d.comparison.find(m => m.name === d.best_model);
+        if (best && best.confusion_matrix) {
+            const cm = best.confusion_matrix;
+            document.getElementById('cmModelName').textContent = d.best_model;
+            const tn = cm[0][0], fp = cm[0][1], fn = cm[1][0], tp = cm[1][1];
+            document.getElementById('cmGrid').innerHTML = `
+                <div class="cm-cell cm-tn"><div class="cm-num">${tn}</div><div class="cm-tag">TN</div></div>
+                <div class="cm-cell cm-fp"><div class="cm-num">${fp}</div><div class="cm-tag">FP</div></div>
+                <div class="cm-cell cm-fn"><div class="cm-num">${fn}</div><div class="cm-tag">FN</div></div>
+                <div class="cm-cell cm-tp"><div class="cm-num">${tp}</div><div class="cm-tag">TP</div></div>
+            `;
+            document.getElementById('cmSection').style.display = 'block';
+        }
+    } catch (e) { console.warn('Metrics load error:', e); }
+}
+
+async function loadStats() {
+    try {
+        const r = await fetch(`${API}/stats`);
+        const d = await r.json();
+        document.getElementById('statTotal').textContent    = d.total_predictions;
+        document.getElementById('statAvgProb').textContent  = d.avg_disease_probability + '%';
+
+        
+        const dist = d.risk_distribution || {};
+        const total = d.total_predictions || 1;
+        const order = ['Low Risk', 'Moderate Risk', 'High Risk', 'Very High Risk'];
+        const bar = order.map(k => {
+            const count = dist[k] || 0;
+            const pct   = ((count / total) * 100).toFixed(1);
+            const cfg   = RISK_CONFIG[k] || {};
+            return count ? `<div class="dist-seg" style="width:${pct}%;background:${cfg.color};" title="${k}: ${count} (${pct}%)"></div>` : '';
+        }).join('');
+        const legend = order.map(k => {
+            const count = dist[k] || 0;
+            if (!count) return '';
+            const cfg = RISK_CONFIG[k] || {};
+            return `<span class="dist-leg-item"><span class="dist-dot" style="background:${cfg.color}"></span>${k}: ${count}</span>`;
+        }).join('');
+        document.getElementById('riskDistBar').innerHTML = `
+            <div class="dist-bar">${bar || '<div style="width:100%;background:#e5e7eb;height:12px;border-radius:6px;"></div>'}</div>
+            <div class="dist-legend">${legend}</div>`;
+    } catch (e) { console.warn('Stats load error:', e); }
+}
+
+async function loadHistory() {
+    try {
+        const r = await fetch(`${API}/history`);
+        const rows = await r.json();
+        const tbody = document.getElementById('histBody');
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="8" class="empty-cell">No records yet</td></tr>';
+            return;
+        }
+        const cfg = RISK_CONFIG;
+        tbody.innerHTML = rows.map(row => {
+            const c = cfg[row.risk_level] || { color: '#6b7280', bg: '#f3f4f6' };
+            return `<tr>
+                <td>#${row.id}</td>
+                <td>${row.age}</td>
+                <td>${row.sex}</td>
+                <td>${row.trestbps}</td>
+                <td>${row.chol}</td>
+                <td><span class="risk-pill" style="color:${c.color};background:${c.bg};border:1px solid ${c.border||c.color}20;">${row.risk_level}</span></td>
+                <td>${row.probability}</td>
+                <td>${row.created_at}</td>
+            </tr>`;
+        }).join('');
+    } catch (e) { console.warn('History load error:', e); }
+}
+
+
+document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    document.getElementById('formError').style.display = 'none';
+
+    const fields = ['age','sex','cp','trestbps','chol','fbs','restecg','thalach','exang'];
+    const payload = {};
+    for (const f of fields) {
+        const v = document.getElementById(f).value;
+        if (v === '') {
+            showFormError('Please fill in all fields before submitting.');
+            return;
+        }
+        payload[f] = v;
+    }
+
+    document.getElementById('overlay').style.display = 'flex';
+
+    try {
+        const res = await fetch(`${API}/predict`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        document.getElementById('overlay').style.display = 'none';
+
+        if (result.error) { showFormError('Server error: ' + result.error); return; }
+
+        renderResult(result);
+        loadStats();
+        loadHistory();
+
+        document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (err) {
+        document.getElementById('overlay').style.display = 'none';
+        showFormError('Cannot reach the backend. Make sure the Flask server is running.');
+    }
+});
+
+function renderResult(r) {
+    const card = document.getElementById('resultCard');
+    card.style.display = 'block';
+
+    const cfg = RISK_CONFIG[r.risk_level] || { color:'#6b7280', bg:'#f3f4f6', border:'#d1d5db', icon:'ℹ️' };
+
+    
+    const header = document.getElementById('riskHeader');
+    header.style.background = cfg.bg;
+    header.style.borderColor = cfg.border;
+
+    document.getElementById('riskIcon').textContent   = cfg.icon;
+    document.getElementById('riskTag').textContent    = r.risk_level;
+    document.getElementById('riskTag').style.color    = cfg.color;
+    document.getElementById('riskTag').style.background = cfg.color + '18';
+    document.getElementById('riskTitle').textContent  = `Heart Disease Risk: ${r.risk_level}`;
+    document.getElementById('riskTitle').style.color  = cfg.color;
+    document.getElementById('riskAdvice').textContent = r.risk_advice;
+
+    
+    const pct = r.prob_heart_disease_pct;
+    document.getElementById('gaugePct').textContent   = pct + '%';
+    document.getElementById('gaugeFill').style.width  = pct + '%';
+    document.getElementById('gaugeFill').style.background =
+        `linear-gradient(90deg, #059669, ${pct < 30 ? '#059669' : pct < 55 ? '#d97706' : pct < 75 ? '#dc2626' : '#7c3aed'})`;
+
+    document.getElementById('pctSafe').textContent     = r.prob_no_disease_pct + '%';
+    document.getElementById('pctRisk').textContent     = r.prob_heart_disease_pct + '%';
+    document.getElementById('barSafe').style.width     = r.prob_no_disease_pct + '%';
+    document.getElementById('barRisk').style.width     = r.prob_heart_disease_pct + '%';
+
+
+    document.getElementById('metaModel').textContent  = r.model_used;
+    document.getElementById('metaConf').textContent   = r.confidence_pct + '%';
+    document.getElementById('metaId').textContent     = '#' + r.record_id;
+}
+
+function showFormError(msg) {
+    const el = document.getElementById('formError');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function clearForm() {
+    document.getElementById('predictionForm').reset();
+    document.getElementById('formError').style.display = 'none';
+    document.getElementById('resultCard').style.display = 'none';
+}
+
+loadAll();
+</script>
+</body>
+</html>
